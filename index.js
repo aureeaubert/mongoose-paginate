@@ -12,11 +12,12 @@
  * @param {Number} [options.offset=0] - Use offset or page to set skip position
  * @param {Number} [options.page=1]
  * @param {Number} [options.limit=10]
+ * @param {Number} [options.noPaging=false]
  * @param {Function} [callback]
  * @returns {Promise}
  */
 
-function paginate(query, options, callback) {
+async function paginate(query, options, callback) {
   query = query || {};
   options = Object.assign({}, paginate.options, options);
   let select = options.select;
@@ -25,7 +26,9 @@ function paginate(query, options, callback) {
   let lean = options.lean || false;
   let leanWithId = options.leanWithId ? options.leanWithId : true;
   let limit = options.limit ? options.limit : 10;
-  let page, offset, skip, promises;
+  let noPaging = options.noPaging || false 
+  let page, offset, skip, data;
+
   if (options.offset) {
     offset = options.offset;
     skip = offset;
@@ -37,52 +40,52 @@ function paginate(query, options, callback) {
     offset = 0;
     skip = offset;
   }
-  if (limit) {
-    let docsQuery = this.find(query)
-      .select(select)
-      .sort(sort)
-      .skip(skip)
-      .limit(limit)
-      .lean(lean);
-    if (populate) {
-      [].concat(populate).forEach((item) => {
-        docsQuery.populate(item);
-      });
-    }
-    promises = {
-      docs: docsQuery.exec(),
-      count: this.count(query).exec()
-    };
-    if (lean && leanWithId) {
-      promises.docs = promises.docs.then((docs) => {
-        docs.forEach((doc) => {
-          doc.id = String(doc._id);
-        });
-        return docs;
-      });
-    }
+
+  let docsQuery = this.find(query)
+    .select(select)
+    .sort(sort)
+    .skip(skip)
+    .limit(limit)
+    .lean(lean);
+
+  if (populate) {
+    [].concat(populate).forEach((item) => {
+      docsQuery.populate(item);
+    });
   }
-  promises = Object.keys(promises).map((x) => promises[x]);
-  return Promise.all(promises).then((data) => {
-    let result = {
-      docs: data.docs,
-      total: data.count,
-      limit: limit
-    };
-    if (offset !== undefined) {
-      result.offset = offset;
-    }
-    if (page !== undefined) {
-      result.page = page;
+  data = {
+    docs: await docsQuery.exec(),
+  };
+
+  if (noPaging === false) {
+    data.count = await this.count(query).exec();
+  }
+
+  if (lean && leanWithId) {
+    data.docs.forEach((doc) => {
+        doc.id = String(doc._id);
+    });
+  }
+
+  let result = {
+    docs: data.docs,
+    limit: limit
+  };
+
+  if (offset !== undefined) {
+    result.offset = offset;
+  }
+
+  if (page !== undefined) {
+    result.page = page;
+
+    if (noPaging === false) {
+      result.total = data.count,
       result.pages = Math.ceil(data.count / limit) || 1;
     }
-    if (typeof callback === 'function') {
-      return callback(null, result);
-    }
-    let promise = new Promise();
-    promise.resolve(result);
-    return promise;
-  });
+  }
+
+  return result;
 }
 
 /**
