@@ -37,11 +37,16 @@
   },
   "dependencies": {},
   "devDependencies": {
-    "mongoose": "4.3.4",
-    "mocha": "2.3.4",
-    "chai": "3.4.1"
+    "eslint": "^5.9.0",
+    "eslint-config-airbnb-base": "^13.1.0",
+    "eslint-config-prettier": "^3.3.0",
+    "eslint-plugin-import": "^2.14.0",
+    "eslint-plugin-jest": "^22.0.1",
+    "eslint-plugin-prettier": "^3.0.0",
+    "jest": "^23.6.0",
+    "prettier": "^1.15.2"
   },
   "scripts": {
-    "test": "./node_modules/.bin/mocha tests/*.js -R spec --ui bdd --timeout 5000"
+    "test:lint": "eslint ./ --fix"
   }
 }
