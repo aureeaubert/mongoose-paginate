@@ -55,7 +55,7 @@ async function paginate(query = {}, options = {}, isAggregation = false) {
       : await getAggregateQuery.call(this, query, options)
   };
 
-  if (options.noPaging) {
+  if (!options.noPaging) {
     data.count = !isAggregation
       ? await getCount.call(this, query)
       : await getAggregateCount.call(this, query);
@@ -67,7 +67,7 @@ async function paginate(query = {}, options = {}, isAggregation = false) {
     page: options.page
   };
 
-  if (options.noPaging === false) {
+  if (!options.noPaging) {
     result.total = data.count;
     result.pages = Math.ceil(data.count / options.limit) || 1;
   }
