@@ -62,7 +62,7 @@ async function paginate(query = {}, options = {}, isAggregation = false) {
   }
 
   const result = {
-    docs: data.docs,
+    docs: data.docs.map(doc => ({ ...doc, id: String(doc._id) })),
     limit: options.limit,
     page: options.page
   };
