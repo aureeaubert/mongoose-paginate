@@ -30,6 +30,10 @@ async function getCount(query) {
 async function getAggregateCount(query) {
   const countResponse = await this.aggregate([...query, { $count: "count" }]);
 
+  if (!countResponse[0]) {
+    return 0;
+  }
+
   return countResponse[0].count;
 }
 
